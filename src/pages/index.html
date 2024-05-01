@@ -5,13 +5,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#000000" />
 	<link rel="icon" href="/favicon.ico" />
-	<link rel="manifest" href="/manifest.json" />
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
 	<meta name="msapplication-TileColor" content="#000000">
-
 	<title>WebLarek</title>
 	<meta name="description" content="">
 </head>
@@ -20,23 +18,20 @@
 		<header class="header">
 			<div class="header__container">
 				<a class="header__logo" href="/">
-					<img class="header__logo-image" src="<%=require('../images/logo.svg')%>" alt="Film! logo" />
+					<img class="header__logo-image" src="<%=require('../images/logo.svg')%>" alt="Larek logo" />
 				</a>
 				<button class="header__basket">
 					<span class="header__basket-counter">0</span>
 				</button>
 			</div>
 		</header>
-
 		<main class="gallery"></main>
 	</div>
 
 	<div class="modal" id="modal-container">
 		<div class="modal__container">
 			<button class="modal__close" aria-label="закрыть"></button>
-			<div class="modal__content">
-
-			</div>
+			<div class="modal__content"></div>
 		</div>
 	</div>
 
@@ -51,7 +46,7 @@
 						<h2 class="card__title">Бэкенд-антистресс</h2>
 						<p class="card__text">Если планируете решать задачи в тренажёре, берите два.</p>
 						<div class="card__row">
-							<button class="button">В корзину</button>
+							<button class="button">Купить</button>
 							<span class="card__price">1000 синапсов</span>
 						</div>
 					</div>
@@ -87,7 +82,7 @@
 						</li>
 					</ul>
 					<div class="modal__actions">
-						<button class="button">Оформить</button>
+						<button class="button basket__action">Оформить</button>
 						<span class="basket__price">153 250 синапсов</span>
 					</div>
 				</div>
@@ -176,13 +171,13 @@
 
 	<template id="card-preview">
 		<div class="card card_full">
-			<img class="card__image" src="<%=require('../images/Subtract.svg')%>" alt="" />
+			<img class="card__image card__image_preview" src="<%=require('../images/Subtract.svg')%>" alt="" />
 			<div class="card__column">
-				<span class="card__category card__category_other">другое</span>
+				<span class="card__category">другое</span>
 				<h2 class="card__title">Бэкенд-антистресс</h2>
 				<p class="card__text">Если планируете решать задачи в тренажёре, берите два.</p>
 				<div class="card__row">
-					<button class="button card__button">В корзину</button>
+					<button class="button card__button">Купить</button>
 					<span class="card__price">1000 синапсов</span>
 				</div>
 			</div>
@@ -191,7 +186,7 @@
 
 	<template id="card-basket">
 		<li class="basket__item card card_compact">
-			<span class="basket__item-index">1</span>
+			<span class="basket__item-index">0</span>
 			<span class="card__title">Фреймворк куки судьбы</span>
 			<span class="card__price">2500 синапсов</span>
 			<button class="basket__item-delete card__button" aria-label="удалить"></button>
@@ -215,8 +210,8 @@
 				<div class="order__field">
 					<h2 class="modal__title">Способ оплаты</h2>
 					<div class="order__buttons">
-						<button name="card" type="button" class="button button_alt">Онлайн</button>
-						<button name="cash" type="button" class="button button_alt">При получении</button>
+						<button name="card" type="button" class="button button_alt button_card">Онлайн</button>
+						<button name="cash" type="button" class="button button_alt button_cash">При получении</button>
 					</div>
 				</div>
 				<label class="order__field">
