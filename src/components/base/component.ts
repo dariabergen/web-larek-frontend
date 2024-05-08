@@ -1,48 +1,51 @@
-export abstract class Component<T> {
-    // Конструктор принимает элемент-контейнер, в котором будет отображаться компонент
-    protected constructor(protected readonly container: HTMLElement) {
-    }
+import { IView } from '../../types';
 
-    // Метод для переключения класса элемента
-    toggleElementClass(element: HTMLElement, className: string, force?: boolean) {
-        element.classList.toggle(className, force);
-    }
+export abstract class Component <T> implements IView<T> {
+	protected readonly container: HTMLElement;
 
-    // Метод для установки текстового содержимого элемента
-    protected setText(element: HTMLElement, value: unknown) {
-        if (element) {
-            element.textContent = String(value);
-        }
-    }
+	constructor(container: HTMLElement) {
+		this.container = container;
+	}
 
-    // Метод для установки состояния доступности элемента
-    setDisabled(element: HTMLElement, state: boolean) {
-        if (element) {
-            if (state) element.setAttribute('disabled', 'disabled');
-            else element.removeAttribute('disabled');
-        }
-    }
+	toggleElementClass(element: HTMLElement, className: string, force?: boolean): void {
+		if (!element) return;
+		element.classList.toggle(className, force);
+	}
 
-    protected setImage(element: HTMLImageElement, src: string, alt?: string) {
-        if (element) {
-            element.src = src;
-            if (alt) {
-                element.alt = alt;
-            }
-        }
-    }
+	setText(element: HTMLElement, value: unknown): void {
+		if (!element) return;
+		element.textContent = String(value);
+	}
+	setDisabled(element: HTMLElement, state: boolean): void {
+		if (!element) return;
+		if (state) {
+			element.setAttribute('disabled', 'disabled');
+		} else {
+			element.removeAttribute('disabled');
+		}
+	}
 
-    protected hideElement(element: HTMLElement) {
-        element.style.display = 'none';
-    }
+	setHidden(element: HTMLElement): void {
+		if (!element) return;
+		element.style.display = 'none';
+	}
 
-    protected showElement(element: HTMLElement) {
-        element.style.removeProperty('display');
-    }
- 
-    // Метод для отрисовки компонента с возможностью передачи данных
-    render(data?: Partial<T>): HTMLElement {
-        Object.assign(this as object, data ?? {});
-        return this.container;
-    }
+	setVisible(element: HTMLElement): void {
+		if (!element) return;
+		element.style.removeProperty('display');
+	}
+
+	setImage(element: HTMLImageElement, src: string, alt?: string): void {
+		if (!element) return;
+		element.src = src;
+		if (alt) {
+			element.alt = alt;
+		}
+	}
+
+	render(data?: Partial<T>): HTMLElement {
+		Object.assign(this, data);
+		return this.container;
+	}
 }
+

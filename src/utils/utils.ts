@@ -10,10 +10,6 @@ export function isEmpty(value: any): boolean {
     return value === null || value === undefined;
 }
 
-export function formatNumber(x: number, sep = ' ') {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, sep);
-}
-
 export type SelectorCollection<T> = string | NodeListOf<Element> | T[];
 
 export function ensureAllElements<T extends HTMLElement>(selectorElement: SelectorCollection<T>, context: HTMLElement = document as unknown as HTMLElement): T[] {
@@ -73,18 +69,11 @@ export function getObjectProperties(obj: object, filter?: (name: string, prop: P
         .map(([name, prop]) => name);
 }
 
-/**
- * Устанавливает dataset атрибуты элемента
- */
 export function setElementData<T extends Record<string, unknown> | object>(el: HTMLElement, data: T) {
     for (const key in data) {
         el.dataset[key] = String(data[key]);
     }
 }
-
-/**
- * Получает типизированные данные из dataset атрибутов элемента
- */
 export function getElementData<T extends Record<string, unknown>>(el: HTMLElement, scheme: Record<string, Function>): T {
     const data: Partial<T> = {};
     for (const key in el.dataset) {
@@ -92,10 +81,6 @@ export function getElementData<T extends Record<string, unknown>>(el: HTMLElemen
     }
     return data as T;
 }
-
-/**
- * Проверка на простой объект
- */
 export function isPlainObject(obj: unknown): obj is object {
     const prototype = Object.getPrototypeOf(obj);
     return  prototype === Object.getPrototypeOf({}) ||
@@ -105,12 +90,6 @@ export function isPlainObject(obj: unknown): obj is object {
 export function isBoolean(v: unknown): v is boolean {
     return typeof v === 'boolean';
 }
-
-/**
- * Фабрика DOM-элементов в простейшей реализации
- * здесь не учтено много факторов
- * в интернет можно найти более полные реализации
- */
 export function createElement<
     T extends HTMLElement
     >(

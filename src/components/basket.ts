@@ -1,67 +1,56 @@
-// Импорт необходимых модулей и типов данных
-import {Component} from './base/component';
-import {createElement, ensureElement, formatNumber} from '../utils/utils';
-import {EventEmitter} from './base/events';
-import {IBasketView} from '../types';
+import {Model} from './base/model';
+import {IProduct} from '../types';
+import {IEvents} from './base/events';
+interface IBasket {
+	items: IProduct[];
+}
 
-// Определение класса для представления корзины товаров
-export class Basket extends Component<IBasketView> {
-	protected _list: HTMLElement; // Список товаров в корзине
-	protected _total: HTMLElement; // Общая стоимость товаров в корзине
-	protected _button: HTMLButtonElement; // Кнопка открытия заказа
-	protected _index: HTMLElement; // Индикатор количества товаров в корзине
-
-	// Конструктор класса
-	constructor(container: HTMLElement, protected events: EventEmitter) {
-		super(container);
-
-		// Инициализация элементов корзины
-		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-		this._total = this.container.querySelector('.basket__price');
-		this._button = this.container.querySelector('.basket__button');
-
-		// Обработка события нажатия на кнопку заказа
-		if (this._button) {
-			this._button.addEventListener('click', () => {
-				events.emit('order:open'); // Отправка события открытия заказа
-			});
-			this.setDisabled(this._button, true); // Установка кнопки в неактивное состояние
-		}
-
-		this.items = []; // Инициализация списка товаров в корзине
+export class Basket extends Model<IBasket> {
+	protected _items: IProduct[];
+    constructor(data: Partial<IBasket>, events: IEvents) {
+		super(data, events);
+		this._items = [];
 	}
 
-	// Установка списка товаров в корзине
-	set items(items: HTMLElement[]) {
-		// Если есть товары в корзине, заменить список, иначе отобразить сообщение о пустой корзине
-		if (items.length) {
-			this._list.replaceChildren(...items);
-		} else {
-			this._list.replaceChildren(
-				createElement<HTMLParagraphElement>('p', {
-					textContent: 'Корзина пуста',
-				})
-			);
+	add(item: IProduct) {
+		const product = this._items.find((product) => product.id === item.id);
+		if (!product) {
+			this._items.push(item);
+			this.emitChanges('basket:items-changed', { id: item.id });
 		}
 	}
 
-	// Переопределение метода установки текста с добавлением слова "синапсов"
-	setText(element: HTMLElement, value: unknown) {
-		super.setText(element, String(value) + ' синапсов');
+	remove(id: string) {
+		this._items = this._items.filter((item) => item.id !== id);
+		this.emitChanges('basket:items-changed', { id: id });
 	}
 
-	// Установка общей стоимости товаров в корзине
-	set total(total: number) {
-		this.setText(this._total, formatNumber(total)); // Форматирование и установка текста
+	contains(id: string): boolean {
+		const item = this._items.find((item) => item.id === id);
+		return Boolean(item);
 	}
 
-	// Получение общей стоимости товаров в корзине
+	clear() {
+		this._items = [];
+		this.emitChanges('basket:items-changed');
+	}
+
+	get items() {
+		return this._items;
+	}
+
 	get total() {
-		return Number(this._total.textContent.split(' ').slice(0, -1).join('')); // Получение числового значения
+		return this._items.reduce((sum, item) => {
+			return item.price + sum;
+		}, 0);
 	}
 
-	// Получение кнопки заказа
-	get button() {
-		return this._button;
+	get length() {
+		return this._items.length;
+	}
+
+	getIdList() {
+		return this._items.map((item) => item.id);
 	}
 }
+

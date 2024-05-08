@@ -1,12 +1,16 @@
-import { LotItem } from '../components/appData';
+export interface IView<T> {
+	toggleElementClass(element: HTMLElement, className: string, force?: boolean): void;
+	setText(element: HTMLElement, value: unknown): void;
+	setDisabled(element: HTMLElement, state: boolean): void;
+	setHidden(element: HTMLElement): void;
+	setVisible(element: HTMLElement): void;
+	setImage(element: HTMLElement, src: string, alt?: string): void;
+	render(data?: Partial<T>): HTMLElement;
+}
 
-export type ApiListResponse<Type> = {
-	total: number;
-	items: Type[];
-};
-
-export type ApiMethods = 'POST' | 'PUT' | 'DELETE';
-
+export interface IModel {
+	emitChanges(event: string, data?: object): void;
+}
 export interface IProduct {
 	id: string;
 	description: string;
@@ -16,17 +20,13 @@ export interface IProduct {
 	price: number;
 }
 
-export interface IModalData {
-	content: HTMLElement;
-}
-
 export interface IFormState {
 	valid: boolean;
-	errors: string[];
+	error: string;
 }
 
-export interface ISuccess {
-	total: number;
+export interface IForm extends IFormState {
+	render(data?: IFormState): HTMLElement;
 }
 
 export interface IContactForm {
@@ -34,62 +34,49 @@ export interface IContactForm {
 	phone: string;
 }
 
-export interface IOrderFormData {
-	payment: string;
-	address: string;
+export interface IIdentifier {
+	id: string;
 }
 
-export type FormErrors = Partial<Record<keyof IOrder, string>>;
-
-export interface IOrder extends IContactForm {
-	payment: string;
-	address: string;
-	items: string[];
+export interface IOrderList {
 	total: number;
+	items: string[];
 }
 
-export interface IOrderSuccess extends IOrder {
+export interface IOrderResult {
 	id: string;
 	total: number;
 }
 
-export interface IBasketView {
-	items: HTMLElement[];
-	total: number;
+export type ICatalogCard = Omit<IProduct, 'description'>;
+export type IPreviewCard = IProduct & { valid: boolean; state: boolean };
+export type IBasketCard = Omit<IProduct, 'description' | 'category' | 'image'> & {
+index: number;
+};
+export type PaymentMethod = 'cash' | 'card';
+
+export interface IOrderFormDatta {
+	payment: PaymentMethod;
+	address: string;
 }
 
-export interface IAppState {
-	gallery: IProduct[];
-	basket: string[];
-	preview: string | null;
-	order: IOrder | null;
-}
+export type IOrderData = IOrderFormDatta & IContactForm & IOrderList;
 
-export interface ICard {
-	title: string;
-	description?: string | string[];
-	image: string;
-	category: string;
-	price?: string;
-	index?: number;
-}
-
-export interface ICardActions {
-	onClick: (event: MouseEvent) => void;
-}
-
-export interface IPageState {
-	counter: number;
-	gallery: HTMLElement[];
-	locked: boolean;
+export interface IOrderBuilder {
+	delivery: IOrderFormDatta;
+	contacts: IContactForm;
+	orderList: IOrderList;
+	result: IOrderData;
 }
 
 export interface IProductsAPI {
-	getItemList: () => Promise<IProduct[]>;
-	getItem: (id: string) => Promise<IProduct>;
-	orderItems: (order: IOrder) => Promise<IOrderSuccess>;
+	getItem(id: string): Promise<IProduct>;
+	getItemList(): Promise<IProduct[]>;
+	orderItems(order: IOrderData): Promise<IOrderResult>;
 }
 
-export type CatalogChangeEvent = {
-	catalog: LotItem[];
-};
+export interface IInputData {
+	field: string;
+	value: string;
+}
+

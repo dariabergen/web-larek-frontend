@@ -1,241 +1,186 @@
-// Импорт стилей
 import './scss/styles.scss';
 
-// Импорт компонентов
-import { ItemsAPI } from './components/IproductsApi';
-import { Page } from './components/pageView';
-import { CatalogItem } from './components/card';
-import { Modal } from './components/common/modal';
-import { Basket } from './components/basket';
-import { ContactForm } from './components/contact';
-import { Order } from './components/order';
-import { Success } from './components/succesView';
+import {ItemsAPI} from './components/IproductsApi';
+import {CatalogItem, PreviewCard, BasketCard} from './components/card';
+import {Catalog} from './components/catalog';
+import {cloneTemplate, ensureElement} from './utils/utils';
 
-// Импорт базовых утилит и констант
-import { API_URL, CDN_URL, settingsTemplates } from './utils/constants';
-import { EventEmitter } from './components/base/events';
-import { cloneTemplate, ensureElement } from './utils/utils';
+import {CDN_URL, API_URL} from './utils/constants';
+import {EventEmitter} from './components/base/events';
 
-// Импорт типов и данных
-import { AppState, LotItem } from './components/appData';
-import { IContactForm, IOrderFormData, CatalogChangeEvent } from './types';
+import {ICatalogCard,IContactForm,IOrderFormDatta,IForm,IFormState,IIdentifier,IOrderData,
+	    IOrderList,IOrderResult,IProduct,PaymentMethod} from './types';
+import {Page} from './components/pageView';
+import {Modal} from './components/common/modal';
+import {Basket} from './components/basket';
+import {BasketView} from './components/basketView';
+import {ContactForm, OrderForm} from './components/contact';
+import {INPUT_ERROR_TEXT, EVENTS} from './utils/constants';
+import {Success} from './components/succesView';
+import {OrderBuilder} from './components/order';
 
-// Создание экземпляра класса EventEmitter для работы с событиями
-const events = new EventEmitter();
+const cardTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
+const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
+const pageContent = ensureElement<HTMLElement>('.page');
+const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
+const successTemplate = ensureElement<HTMLTemplateElement>('#success');
+const modalContainer = ensureElement<HTMLDivElement>('#modal-container');
 
-// Создание экземпляра класса ItemsAPI для работы с сервером
 const api = new ItemsAPI(CDN_URL, API_URL);
+const emitter = new EventEmitter();
+const catalog = new Catalog({}, emitter);
+const basket = new Basket({}, emitter);
+const orderBuilder = new OrderBuilder({}, emitter);
+const page = new Page(pageContent, emitter);
+const modal = new Modal(modalContainer, emitter);
+const contactsUserInt = new ContactForm(cloneTemplate(contactsTemplate), emitter);
+const successUserInt = new Success(cloneTemplate(successTemplate), emitter);
+const previewUserInt = new PreviewCard(cloneTemplate(cardPreviewTemplate), emitter);
+const basketUserInt = new BasketView(cloneTemplate(basketTemplate), emitter);
+const orderUserInt = new OrderForm(cloneTemplate(orderTemplate), emitter);
 
-// Получение HTML-шаблонов
-const cardCatalogTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.cardCatalogTemplate
-);
-const cardPreviewTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.cardPreviewTemplate
-);
-const cardBasketTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.cardBasketTemplate
-);
-const basketTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.basketTemplate
-);
-const orderTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.orderTemplate
-);
-const contactTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.contactsTemplate
-);
-const modalContainer = ensureElement<HTMLTemplateElement>('#modal-container');
-const successTemplate = ensureElement<HTMLTemplateElement>(
-	settingsTemplates.successTemplate
-);
 
-// Создание экземпляров классов с использованием соответствующих шаблонов и настройкой событийной системы
-const appData = new AppState({}, events);
-const page = new Page(document.body, events);
-const modal = new Modal(modalContainer, events);
-const contact = new ContactForm(cloneTemplate(contactTemplate), events);
-const order = new Order(cloneTemplate(orderTemplate), events);
-const basket = new Basket(cloneTemplate(basketTemplate), events);
-const success = new Success(cloneTemplate(successTemplate), events);
+function validate(form: IForm) {
+	const errorText = getErrorText(form);
+	const validity: IFormState = { valid: form.valid, error: errorText };
+	form.render(validity);
+}
 
-// Получение списка товаров с сервера и установка каталога при успешном ответе
-api.getItemList().then(appData.setCatalog.bind(appData)).catch(console.error);
+function getErrorText(form: IForm) {
+	const errorText = !form.valid ? INPUT_ERROR_TEXT : '';
+	return errorText;
+}
 
-// Обработчик события изменения предпросмотра товара
-events.on('preview:changed', (item: LotItem) => {
-	const card = new CatalogItem(cloneTemplate(cardPreviewTemplate), events, {
-		onClick: () => {
-			if (card.buttonText === 'Купить') {
-				appData.orderList.push(item);
-				card.buttonText = 'В корзину';
-				page.counter = appData.getOrderList().length;
-				events.emit('buy:item', item);
-			} else {
-				events.emit('basket:open', item);
-			}
-		},
+emitter.on(EVENTS.ModalOpen, () => {
+	page.lockScroll(true);
+});
+
+emitter.on(EVENTS.ModalClose, () => {
+	page.lockScroll(false);
+});
+
+emitter.on(EVENTS.CatalogItemsChanged, (data: IProduct[]) => {
+	const cardList = data.map((item) => {
+		const card = new CatalogItem<ICatalogCard>(
+			cloneTemplate(cardTemplate),
+			emitter
+		);
+		return card.render(item);
 	});
+	page.render({ catalog: cardList });
+});
 
-	// Проверка наличия товара в корзине и блокировка соответствующих кнопок
-	if (appData.orderList.includes(item)) {
-		card.buttonText = 'Уже в корзине';
-		card.setDisabled(card.button, true);
+emitter.on(EVENTS.CardSelect, (data: IIdentifier) => {
+	modal.open();
+	const product = catalog.find(data.id);
+	if (product) {
+		const previewData = Object.assign(product, {
+			valid: Boolean(product.price),
+			state: !basket.contains(data.id),
+		});
+		modal.render({ content: previewUserInt.render(previewData) });
 	}
+});
 
-	if (!item.price) {
-		card.buttonText = 'Нельзя купить';
-		card.setDisabled(card.button, true);
-	}
-
-	// Отображение карточки товара в модальном окне
+emitter.on(EVENTS.BasketOpen, () => {
+	modal.open();
 	modal.render({
-		content: card.render({
-			title: item.title,
-			category: item.category,
-			image: item.image,
-			description: item.description,
-			price: item.price,
+		content: basketUserInt.render({
+			price: basket.total,
+			valid: basket.length === 0,
 		}),
 	});
 });
 
-events.on('card:select', (item: LotItem) => {
-	appData.setPreview(item);
+emitter.on(EVENTS.BasketAdd, (data: IIdentifier) => {
+	const product = catalog.find(data.id);
+	basket.add(product);
 });
 
-events.on<CatalogChangeEvent>('items:changed', () => {
-	page.gallery = appData.catalog.map((item) => {
-		const card = new CatalogItem(cloneTemplate(cardCatalogTemplate), events, {
-			onClick: () => events.emit('card:select', item),
-		});
-		return card.render({
-			title: item.title,
-			image: item.image,
-			description: item.description,
-			category: item.category,
-			price: item.price,
-		});
+emitter.on(EVENTS.BasketRemove, (data: IIdentifier) => {
+	basket.remove(data.id);
+});
+
+emitter.on(EVENTS.BasketItemsChanged, (data: IIdentifier) => {
+	previewUserInt.render({ valid: true, state: !basket.contains(data.id) });
+	page.render({ counter: basket.length });
+	const cardList = basket.items.map((item, index) => {
+		const cardData = Object.assign(item, { index: index + 1 });
+		const card = new BasketCard(cloneTemplate(cardBasketTemplate), emitter);
+		return card.render(cardData);
+	});
+	basketUserInt.render({
+		list: cardList,
+		valid: basket.length === 0,
+		price: basket.total,
 	});
 });
 
-// Обработчик покупки товара
-events.on('buy:item', (item: LotItem) => {
-	const card = new CatalogItem(cloneTemplate(cardBasketTemplate), events, {
-		onClick: () => events.emit('basket:open', item),
-	});
-	appData.basket.push(
-		card.render({
-			title: item.title,
-			price: item.price,
-			index: appData.orderList.length,
-		})
-	);
-});
+emitter.on(EVENTS.OrderOpen, () => {
+	const orderList: IOrderList = {
+		total: basket.total,
+		items: basket.getIdList(),
+	};
+	orderBuilder.orderList = orderList;
 
-events.on('basket:open', () => {
-	basket.items = appData.basket;
-	if (appData.basket.length === 0) {
-		basket.setDisabled(basket.button, true);
-	} else {
-		basket.setDisabled(basket.button, false);
-	}
-	basket.total = appData.orderList.reduce(
-		(total, currentValue) => total + Number(currentValue.price),
-		0
-	);
 	modal.render({
-		content: basket.render(),
+		content: orderUserInt.render({
+			valid: orderUserInt.valid,
+			error: getErrorText(orderUserInt),
+		}),
 	});
 });
 
-events.on('contacts:open', () => {
+emitter.on(EVENTS.OrderInput, () => {
+	validate(orderUserInt);
+});
+
+emitter.on(EVENTS.OrderSubmit, () => {
+	const deliveryData: IOrderFormDatta = {
+		payment: orderUserInt.payment as PaymentMethod,
+		address: orderUserInt.address,
+	};
+	orderBuilder.delivery = deliveryData;
 	modal.render({
-		content: contact.render({ phone: '', email: '', valid: false, errors: [] }),
+		content: contactsUserInt.render({
+			valid: contactsUserInt.valid,
+			error: getErrorText(contactsUserInt),
+		}),
 	});
 });
 
-events.on('order:open', () => {
-	modal.render({
-		content: order.render({ address: '', valid: false, errors: [] }),
-	});
+emitter.on(EVENTS.ContactsInput, () => {
+	validate(contactsUserInt);
 });
 
-events.on('order:delete', (element: HTMLElement) => {
-	appData.orderList.splice(Number(element.textContent) - 1, 1);
-	appData.basket.length = 0;
-	appData.orderList.forEach((item, i) => {
-		const card = new CatalogItem(cloneTemplate(cardBasketTemplate), events);
-		appData.basket.push(
-			card.render({
-				title: item.title,
-				price: item.price,
-				index: i + 1,
-			})
-		);
-	});
-
-	// Обновление счетчика товаров и отображение корзины
-	page.counter = appData.orderList.length;
-	events.emit('basket:open');
-});
-
-events.on('success:open', () => {
-	appData.order.total = basket.total;
-	appData.order.payment = order.payment;
-	appData.order.items = appData.getOrderList().map((element) => {
-		return element.id;
-	});
+emitter.on(EVENTS.ContactsSubmit, () => {
+	const contactsData: IContactForm = {
+		email: contactsUserInt.email,
+		phone: contactsUserInt.phone,
+	};
+	orderBuilder.contacts = contactsData;
+	const apiObj: IOrderData = orderBuilder.result.toApiObject();
 	api
-		.orderItems(appData.order)
-		.then(() => {
-			appData.basket.length = 0;
-			appData.orderList = [];
-			page.counter = appData.orderList.length;
-			success.total = basket.total;
-			modal.render({ content: success.render({}) });
+		.orderItems(apiObj)
+		.then((data: IOrderResult) => {
+			modal.render({ content: successUserInt.render({ total: data.total }) });
+			orderUserInt.clear();
+			contactsUserInt.clear();
+			basket.clear();
 		})
 		.catch(console.error);
 });
 
-events.on('order:done', () => {
+emitter.on(EVENTS.SuccessSubmit, () => {
 	modal.close();
 });
 
-events.on('formErrors:change', (errors: Partial<IContactForm>) => {
-	const { email, phone } = errors;
-	contact.valid = !email && !phone;
-	contact.errors = Object.values({ phone, email })
-		.filter((i) => !!i)
-		.join('; ');
-});
-
-events.on('formErrors:change', (errors: Partial<IOrderFormData>) => {
-	const { address } = errors;
-	order.valid = !address;
-	order.errors = Object.values({ address })
-		.filter((i) => !!i)
-		.join('; ');
-});
-
-events.on('modal:open', () => {
-	page.locked = true;
-});
-
-events.on('modal:close', () => {
-	page.locked = false;
-});
-
-events.on(
-	/^contacts\..*:change/,
-	(data: { field: keyof IContactForm; value: string }) => {
-		appData.setOrderField(data.field, data.value);
-	}
-);
-
-events.on(
-	/^order\..*:change/,
-	(data: { field: keyof IOrderFormData; value: string }) => {
-		appData.setContactField(data.field, data.value);
-	}
-);
+api
+	.getItemList()
+	.then((data) => {
+		catalog.items = data;
+	})
+	.catch(console.error);
