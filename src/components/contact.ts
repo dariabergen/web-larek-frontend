@@ -10,9 +10,22 @@ export class ContactForm extends Form<IContactForm> {
 		super(container, events);
 		this.emailInput = this.container.elements.namedItem('email') as HTMLInputElement;
 		this.phoneInput = this.container.elements.namedItem('phone') as HTMLInputElement;
+
+		this.emailInput.addEventListener('input', this.handleEmailChange.bind(this));
+        this.phoneInput.addEventListener('input', this.handlePhoneChange.bind(this));
 	}
 
-	get email(): string {
+    private handleEmailChange(event: Event) {
+		const newEmail = (event.target as HTMLInputElement).value;
+		this.emailInput.value = newEmail; 
+	  }
+	
+	  private handlePhoneChange(event: Event) {
+		const newPhone = (event.target as HTMLInputElement).value;
+		this.phoneInput.value = newPhone; 
+	  }
+
+    get email(): string {
 		return this.emailInput.value;
 	}
 
@@ -27,11 +40,13 @@ export class OrderForm extends Form<IOrderFormDatta> {
 	protected cashButton: HTMLButtonElement;
 	protected addressInput: HTMLInputElement;
 
-	constructor(container: HTMLFormElement, events: IEvents) {
+    constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
 		this.buttonContainer = ensureElement<HTMLDivElement>('.order__buttons',container);
 		[this.onlineButton, this.cashButton] = ensureAllElements<HTMLButtonElement>('.button_alt',container);
 		this.addressInput = this.container.elements.namedItem('address') as HTMLInputElement;
+		
+	
         this.buttonContainer.addEventListener('click', (evt) => {
 			if (evt.target === this.onlineButton || evt.target === this.cashButton) {
 				const button = evt.target as HTMLButtonElement;

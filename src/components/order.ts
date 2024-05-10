@@ -1,11 +1,11 @@
-import {IEvents} from './base/events';
-import {IOrderFormDatta,IOrderData,IContactForm,IOrderBuilder,IOrderList,PaymentMethod} from '../types';
-import {Model} from './base/model';
 
-interface IOrder extends IOrderData {
+import {IOrderData,PaymentMethod} from '../types';
+
+
+export interface IOrder extends IOrderData {
 	toApiObject(): IOrderData;
 }
-class Order implements IOrder {
+export class Order implements IOrder {
 	protected _payment: PaymentMethod;
 	protected _address: string;
 	protected _email: string;
@@ -49,30 +49,4 @@ class Order implements IOrder {
 	}
 }
 
-export class OrderBuilder extends Model<IOrderBuilder> {
-	protected order: IOrder;
 
-	constructor(data: Partial<IOrderBuilder>, events: IEvents) {
-		super(data, events);
-		this.order = new Order();
-	}
-
-	set delivery(delivery: IOrderFormDatta) {
-		this.order.payment = delivery.payment;
-		this.order.address = delivery.address;
-	}
-
-	set contacts(contacts: IContactForm) {
-		this.order.email = contacts.email;
-		this.order.phone = contacts.phone;
-	}
-
-	set orderList(orderList: IOrderList) {
-		this.order.total = orderList.total;
-		this.order.items = orderList.items;
-	}
-
-	get result(): IOrder {
-		return this.order;
-	}
-}

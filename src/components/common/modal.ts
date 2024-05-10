@@ -13,11 +13,14 @@ export class Modal extends Component<IModalData> {
 
 	constructor(container: HTMLElement, events: IEvents) {
 		super(container);
-        this._closeButton.addEventListener('click', () => this.close());
-        this._content = ensureElement<HTMLDivElement>('.modal__content', container);
 		this.events = events;
-		this._closeButton = ensureElement<HTMLButtonElement>('.modal__close',container);
-	    this.container.addEventListener('mousedown', (evt: MouseEvent) => {
+		this._closeButton = ensureElement<HTMLButtonElement>(
+			'.modal__close',
+			container
+		);
+		this._content = ensureElement<HTMLDivElement>('.modal__content', container);
+		this._closeButton.addEventListener('click', () => this.close());
+		this.container.addEventListener('mousedown', (evt: MouseEvent) => {
 			const target = evt.target as HTMLElement;
 			if (target.classList.contains('modal')) {
 				this.close();

@@ -17,7 +17,7 @@ import {BasketView} from './components/basketView';
 import {ContactForm, OrderForm} from './components/contact';
 import {INPUT_ERROR_TEXT, EVENTS} from './utils/constants';
 import {Success} from './components/succesView';
-import {OrderBuilder} from './components/order';
+import {OrderBuilder} from './components/orderBilder';
 
 const cardTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
@@ -139,11 +139,6 @@ emitter.on(EVENTS.OrderInput, () => {
 });
 
 emitter.on(EVENTS.OrderSubmit, () => {
-	const deliveryData: IOrderFormDatta = {
-		payment: orderUserInt.payment as PaymentMethod,
-		address: orderUserInt.address,
-	};
-	orderBuilder.delivery = deliveryData;
 	modal.render({
 		content: contactsUserInt.render({
 			valid: contactsUserInt.valid,
@@ -156,18 +151,13 @@ emitter.on(EVENTS.ContactsInput, () => {
 	validate(contactsUserInt);
 });
 
-emitter.on(EVENTS.ContactsSubmit, () => {
-	const contactsData: IContactForm = {
-		email: contactsUserInt.email,
-		phone: contactsUserInt.phone,
-	};
-	orderBuilder.contacts = contactsData;
+emitter.on(EVENTS.ContactsSubmit, () => {  
 	const apiObj: IOrderData = orderBuilder.result.toApiObject();
 	api
 		.orderItems(apiObj)
 		.then((data: IOrderResult) => {
 			modal.render({ content: successUserInt.render({ total: data.total }) });
-			orderUserInt.clear();
+	        orderUserInt.clear();
 			contactsUserInt.clear();
 			basket.clear();
 		})
