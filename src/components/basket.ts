@@ -1,56 +1,41 @@
-import {Model} from './base/model';
-import {IProduct} from '../types';
-import {IEvents} from './base/events';
-interface IBasket {
-	items: IProduct[];
-}
+import { IBasket } from '../types';
+import { createElement, ensureElement } from '../utils/utils';
+import { Component } from './base/component';
+import { IEvents } from './base/events';
+export class Basket extends Component<IBasket> {
+	protected _list: HTMLElement;
+	button: HTMLButtonElement;
+	protected _total: HTMLElement;
 
-export class Basket extends Model<IBasket> {
-	protected _items: IProduct[];
-    constructor(data: Partial<IBasket>, events: IEvents) {
-		super(data, events);
-		this._items = [];
+	constructor(container: HTMLElement, protected events: IEvents) {
+		super(container);
+		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this.button = ensureElement<HTMLButtonElement>('.basket__button',this.container);
+		this._total = ensureElement<HTMLElement>('.basket__price', this.container);
+		if (this.button)
+			this.button.addEventListener('click', () => events.emit('order:open'));
+
+		this.items = [];
 	}
 
-	add(item: IProduct) {
-		const product = this._items.find((product) => product.id === item.id);
-		if (!product) {
-			this._items.push(item);
-			this.emitChanges('basket:items-changed', { id: item.id });
+	set items(items: HTMLElement[]) {
+		if (items.length) {
+			this._list.replaceChildren(...items);
+			this.button.disabled = false;
+		} else {
+			this._list.replaceChildren(
+				createElement<HTMLParagraphElement>('p', {
+					textContent: 'Корзина пуста',
+				})
+			);
 		}
 	}
 
-	remove(id: string) {
-		this._items = this._items.filter((item) => item.id !== id);
-		this.emitChanges('basket:items-changed', { id: id });
+	set total(val: number) {
+		this.setText(this._total, `${val.toString()} синапсов`);
 	}
 
-	contains(id: string): boolean {
-		const item = this._items.find((item) => item.id === id);
-		return Boolean(item);
-	}
-
-	clear() {
-		this._items = [];
-		this.emitChanges('basket:items-changed');
-	}
-
-	get items() {
-		return this._items;
-	}
-
-	get total() {
-		return this._items.reduce((sum, item) => {
-			return item.price + sum;
-		}, 0);
-	}
-
-	get length() {
-		return this._items.length;
-	}
-
-	getIdList() {
-		return this._items.map((item) => item.id);
+	getTotal() {
+		return this._total.textContent;
 	}
 }
-

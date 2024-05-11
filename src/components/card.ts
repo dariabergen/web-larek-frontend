@@ -1,148 +1,111 @@
-import {IEvents} from './base/events';
-import {Component} from './base/component';
-import {ensureElement} from '../utils/utils';
-import {IPreviewCard, IBasketCard} from '../types';
-import {BUY_BUTTON_TEXT,REMOVE_BUTTON_TEXT,UNABLE_BUTTON_TEXT} from '../utils/constants';
+import { Component } from './base/component';
+import { CardCategoryEnum, IProduct, IProductBasket, IPreviewCard } from '../types';
+import { ensureElement } from '../utils/utils';
+import { IActions } from '../types';
 
-class Card<T> extends Component<T> {
-    protected events: IEvents;
-	protected _title: HTMLHeadingElement;
-	protected _price: HTMLSpanElement;
-	protected _id: string;
-    constructor(container: HTMLElement, events: IEvents) {
+export class Card<T> extends Component<IProduct> {
+	protected _category: HTMLElement;
+	protected _title: HTMLElement;
+	protected _image: HTMLImageElement;
+	protected _price: HTMLElement;
+
+	constructor(container: HTMLElement, actions?: IActions) {
 		super(container);
-        this._price = ensureElement<HTMLSpanElement>('.card__price', container);
-		this.events = events;
-		this._title = ensureElement<HTMLHeadingElement>('.card__title', container);
+		this._category = ensureElement<HTMLElement>('.card__category', container);
+		this._title = ensureElement<HTMLElement>('.card__title', container);
+		this._image = ensureElement<HTMLImageElement>('.card__image', container);
+		this._price = ensureElement<HTMLElement>('.card__price', container);
+
+		if (actions?.onClick) container.addEventListener('click', actions.onClick);
 	}
 
-	get id() {
-		return this._id;
+	set category(value: string) {
+		this.setText(this._category, value);
+		this._category.className = `card__category card__category_${
+			CardCategoryEnum[value as keyof typeof CardCategoryEnum]
+		}`;
 	}
 
-	set id(value: string) {
-		this._id = value;
-	}
-
-    get price() {
-		return this._price.textContent || '';
-	}
-
-	set price(value: string) {
-		const priceText = value ? `${value} синапсов` : 'Бесценно';
-		this.setText(this._price, priceText);
-	}
-
-	get title() {
-		return this._title.textContent || '';
+	set price(value: number | null) {
+		this.setText(
+			this._price,
+			value ? `${value.toString()} синапсов` : 'Бесценно'
+		);
 	}
 
 	set title(value: string) {
 		this.setText(this._title, value);
 	}
+
+	set image(value: string) {
+		this.setImage(this._image, value, this.title);
+	}
 }
 
-export class CatalogItem<T> extends Card<T> {
-	protected _category: HTMLSpanElement;
-	protected _image: HTMLImageElement;
-	constructor(container: HTMLElement, events: IEvents) {
-		super(container, events);
-		this._category = ensureElement<HTMLSpanElement>('.card__category',container);
-		this._image = ensureElement<HTMLImageElement>('.card__image', container);
-		this.container.addEventListener('click', () =>
-			this.events.emit('card:select', { id: this.id })
-		);
-	}
+export class CardBasket extends Component<IProductBasket> {
+	protected _index: HTMLElement;
+	protected _title: HTMLElement;
+	protected _button: HTMLElement;
+	protected _price: HTMLElement;
 
-	protected toggleCategoryClass(value: string) {
-		const categoryClassObj: Record<string, string> = {
-			'софт-скил': 'card__category_soft',
-			'другое': 'card__category_other',
-			'дополнительное': 'card__category_additional',
-			'кнопка': 'card__category_button',
-			'хард-скил': 'card__category_hard',
-		};
-		if (value in categoryClassObj) {
-			const classModifier = categoryClassObj[value];
-			this.toggleElementClass(this._category, classModifier, true);
+	constructor(container: HTMLElement, actions?: IActions) {
+		super(container);
+		this._index = ensureElement<HTMLElement>(`.basket__item-index`, container);
+		this._title = ensureElement<HTMLElement>(`.card__title`, container);
+		this._button = ensureElement<HTMLElement>(`.card__button`, container);
+		this._price = ensureElement<HTMLElement>(`.card__price`, container);
+
+		if (actions?.onClick) {
+			if (this._button) {
+				container.removeEventListener('click', actions.onClick);
+				this._button.addEventListener('click', actions.onClick);
+			}
 		}
 	}
 
-	get category() {
-		return this._category.textContent || '';
+	set index(value: number) {
+		this.setText(this._index, value);
 	}
 
-	set category(value: string) {
-		this.toggleCategoryClass(value);
-		this.setText(this._category, value);
+	set title(value: string) {
+		this.setText(this._title, value);
 	}
 
-	set image(value: string) {
-		this.setImage(this._image, value);
+	set price(value: number | null) {
+		this.setText(
+			this._price,
+			value ? `${value.toString()} синапсов` : 'Бесценно'
+		);
 	}
 }
 
-export class PreviewCard extends CatalogItem<IPreviewCard> {
-	protected _description: HTMLParagraphElement;
-	protected button: HTMLButtonElement;
+export class PreviewCard extends Card<IPreviewCard> {
+	protected _description: HTMLElement;
+	protected _button: HTMLElement;
 
-	constructor(container: HTMLElement, events: IEvents) {
-		super(container, events);
-		this._description = ensureElement<HTMLParagraphElement>(
-			'.card__text',
-			container
-		);
-		this.button = ensureElement<HTMLButtonElement>('.card__button', container);
+	constructor(container: HTMLElement, actions?: IActions) {
+		super(container, actions);
+		this._button = ensureElement<HTMLElement>(`.card__button`, container);
+		this._description = ensureElement<HTMLElement>(`.card__text`, container);
 
-		this.button.addEventListener('click', () => {
-			if (this.button.textContent === BUY_BUTTON_TEXT) {
-				this.events.emit('basket:add', { id: this.id });
-			} else {
-				this.events.emit('basket:remove', { id: this.id });
+		if (actions?.onClick) {
+			if (this._button) {
+				container.removeEventListener('click', actions.onClick);
+				this._button.addEventListener('click', actions.onClick);
 			}
-		});
+		}
 	}
 
 	set description(value: string) {
 		this.setText(this._description, value);
 	}
 
-	get valid() {
-		return !this.button.disabled;
-	}
-
-	set valid(state: boolean) {
-		this.setDisabled(this.button, !state);
-	}
-
-	set state(state: boolean) {
-		if (!this.valid) {
-			this.setText(this.button, UNABLE_BUTTON_TEXT);
+	set price(value: number | null) {
+		if (value) {
+			this.setText(this._price, value + ` синапсов`);
 		} else {
-			const text = state ? BUY_BUTTON_TEXT : REMOVE_BUTTON_TEXT;
-			this.setText(this.button, text);
+			this._button.setAttribute('disabled', 'true');
+			this.setText(this._price, `Бесценно`);
 		}
 	}
 }
-
-export class BasketCard extends Card<IBasketCard> {
-	protected _index: HTMLSpanElement;
-	protected button: HTMLButtonElement;
-    constructor(container: HTMLElement, events: IEvents) {
-		super(container, events);
-		this._index = ensureElement<HTMLSpanElement>(
-			'.basket__item-index',
-			container
-		);
-		this.button = ensureElement<HTMLButtonElement>('.card__button', container);
-
-		this.button.addEventListener('click', () =>
-			this.events.emit('basket:remove', { id: this.id })
-		);
-	}
-
-	set index(value: number) {
-		this.setText(this._index, value);
-	}
-}
-

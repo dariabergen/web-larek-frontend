@@ -1,38 +1,36 @@
-import { ensureElement } from '../utils/utils';
-import { Component } from './base/component';
 import { IEvents } from './base/events';
+import { Component } from './base/component';
+import { ensureElement } from '../utils/utils';
+import { IPage } from '../types';
 
-interface IPageState {
-	catalog: HTMLElement[];
-	counter: number;
-}
+export class Page extends Component<IPage> {
+	protected _counterBasket: HTMLElement;
+	protected _cardList: HTMLElement;
+	protected _wrapper: HTMLElement;
+	protected _basket: HTMLElement;
 
-export class Page extends Component<IPageState> {
-    protected _counter: HTMLSpanElement;
-	protected _basketButton: HTMLElement;
-	protected _catalog: HTMLElement;
-    protected _wrapper: HTMLDivElement;
-	protected events: IEvents;
-    constructor(container: HTMLElement, events: IEvents) {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this.events = events;
-		this._basketButton = ensureElement<HTMLElement>('.header__basket');
-		this._counter = ensureElement<HTMLSpanElement>('.header__basket-counter');
-		this._catalog = ensureElement<HTMLElement>('.gallery');
-        this._wrapper = ensureElement<HTMLDivElement>('.page__wrapper', container);
-        this._basketButton.addEventListener('click', () => events.emit('basket:open'));
+
+		this._counterBasket = ensureElement<HTMLElement>('.header__basket-counter');
+		this._cardList = ensureElement<HTMLElement>('.gallery');
+		this._wrapper = ensureElement<HTMLElement>('.page__wrapper');
+		this._basket = ensureElement<HTMLElement>('.header__basket');
+
+		this._basket.addEventListener('click', () => {
+			this.events.emit('basket:open');
+		});
+	}
+
+	set counter(value: number) {
+		this.setText(this._counterBasket, String(value));
 	}
 
 	set catalog(items: HTMLElement[]) {
-		this._catalog.replaceChildren(...items);
+		this._cardList.replaceChildren(...items);
 	}
 
-	set counter(value: string) {
-		this.setText(this._counter, value);
+	set locked(value: boolean) {
+		this.toggleClass(this._wrapper, 'page__wrapper_locked', value);
 	}
-
-  lockScroll(state: boolean) {
-    this.toggleElementClass(this._wrapper, 'page__wrapper_locked', state);
-  }
 }
-

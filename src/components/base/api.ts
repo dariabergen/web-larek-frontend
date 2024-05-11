@@ -1,8 +1,3 @@
-export type ApiListResponse<Type> = {
-	total: number;
-	items: Type[];
-};
-
 export class Api {
 	readonly baseUrl: string;
 	protected options: RequestInit;
@@ -25,24 +20,20 @@ export class Api {
 				.then((data) => Promise.reject(data.error ?? response.statusText));
 	}
 
-	protected request(uri: string, options: RequestInit) {
-		return fetch(this.baseUrl + uri, options).then(this.handleResponse);
-	}
-
 	get(uri: string) {
-		return this.request(uri, {
+		return fetch(this.baseUrl + uri, {
 			...this.options,
 			method: 'GET',
-		});
+		}).then(this.handleResponse);
 	}
 
-	post(uri: string, data: object, method: ApiMethods = 'POST') {
-		return this.request(uri, {
+	post(uri: string, data: object, method: ApiPostMethods = 'POST') {
+		return fetch(this.baseUrl + uri, {
 			...this.options,
 			method,
 			body: JSON.stringify(data),
-		});
+		}).then(this.handleResponse);
 	}
 }
 
-export type ApiMethods = 'POST' | 'PUT' | 'DELETE';
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
