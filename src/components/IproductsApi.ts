@@ -1,18 +1,18 @@
-import { Api, ApiListResponse } from './base/api';
-import { IProduct, IOrderAnswer, IOrder } from '../types/index';
-interface IWebLarekApi {
-	getProductList: () => Promise<IProduct[]>; 
-	orderProduct: (value: IOrder) => Promise<IOrderAnswer>; 
+import { ApiListResponse, IProduct, IOrder, IOrderResult } from '../types';
+import { Api } from './base/api';
+
+export interface IWebLarekApi {
+	getItemList: () => Promise<IProduct[]>;
 }
+
 export class WebLarekApi extends Api implements IWebLarekApi {
 	readonly cdn: string;
-
 	constructor(cdn: string, baseUrl: string, options?: RequestInit) {
 		super(baseUrl, options);
 		this.cdn = cdn;
 	}
 
-	getProductList(): Promise<IProduct[]> {
+	getItemList(): Promise<IProduct[]> {
 		return this.get('/product').then((data: ApiListResponse<IProduct>) =>
 			data.items.map((item) => ({
 				...item,
@@ -21,7 +21,7 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 		);
 	}
 
-	orderProduct(value: IOrder): Promise<IOrderAnswer> {
-		return this.post('/order', value).then((data: IOrderAnswer) => data);
+	postOrder(orderData: IOrder): Promise<IOrderResult> {
+		return this.post('/order', orderData).then((data: IOrderResult) => data);
 	}
 }

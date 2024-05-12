@@ -1,32 +1,50 @@
-import { Form } from './common/form';
-import { IOrderContact } from '../types/index';
+import { IOrderForm } from '../types';
+import { ACTIVE_BUTTON_CLASS } from '../utils/constants';
 import { IEvents } from './base/events';
-import { ensureAllElements } from '../utils/utils';
+import { Form } from './common/form';
 
-export class Order extends Form<IOrderContact> {
-	protected _buttons: HTMLButtonElement[];
-    constructor(container: HTMLFormElement, events: IEvents) {
+export class Order extends Form<IOrderForm> {
+	protected buttons: HTMLButtonElement[] = [];
+
+	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
-		this._buttons = ensureAllElements<HTMLButtonElement>(
-			'.button_alt',
-			container
-		);
-		this._buttons.forEach((button) => {
-			button.addEventListener('click', () => {
-				this.payment = button.name;
-				events.emit('payment:change', button);
-			});
-		});
-	}
 
-	set payment(name: string) {
-		this._buttons.forEach((button) => {
-			this.toggleClass(button, 'button_alt-active', button.name === name);
+		this.buttons = [
+			container.elements.namedItem('card') as HTMLButtonElement,
+			container.elements.namedItem('cash') as HTMLButtonElement,
+		];
+
+		this.buttons.forEach((button) => {
+			button.addEventListener('click', () => {
+				this.buttons.forEach((item) =>
+					item.classList.remove(ACTIVE_BUTTON_CLASS)
+				);
+				button.classList.add(ACTIVE_BUTTON_CLASS);
+				this.onInputChange('payment', button.name);
+			});
 		});
 	}
 
 	set address(value: string) {
 		(this.container.elements.namedItem('address') as HTMLInputElement).value =
 			value;
+	}
+
+	set payment(value: string) {
+		const currentButton = this.buttons.find((button, index, array) => {
+			return button.name === value;
+		});
+		if (currentButton) {
+			currentButton.classList.add(ACTIVE_BUTTON_CLASS);
+			this.onInputChange('payment', currentButton.name);
+		}
+	}
+
+	cleanFieldValues() {
+		this.address = '';
+		this.payment = '';
+		this.buttons.forEach((button) =>
+			button.classList.remove(ACTIVE_BUTTON_CLASS)
+		);
 	}
 }

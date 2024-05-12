@@ -28,6 +28,7 @@ export class EventEmitter implements IEvents {
 		this._events.get(eventName)?.add(callback);
 	}
 
+
 	off(eventName: EventName, callback: Subscriber) {
 		if (this._events.has(eventName)) {
 			this._events.get(eventName)!.delete(callback);

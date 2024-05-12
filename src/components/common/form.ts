@@ -1,13 +1,13 @@
+import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/component';
 import { IEvents } from '../base/events';
-import { ensureElement } from '../../utils/utils';
 
 interface IFormValid {
 	valid: boolean;
 	errors: string[];
 }
 
-export class Form<T> extends Component<IFormValid> {
+export abstract class Form<T> extends Component<IFormValid> {
 	protected _submit: HTMLButtonElement;
 	protected _errors: HTMLElement;
 
@@ -41,7 +41,7 @@ export class Form<T> extends Component<IFormValid> {
 	}
 
 	set valid(value: boolean) {
-		this.setDisabled(this._submit, !value);
+		this._submit.disabled = !value;
 	}
 
 	set errors(value: string) {
@@ -54,4 +54,6 @@ export class Form<T> extends Component<IFormValid> {
 		Object.assign(this, inputs);
 		return this.container;
 	}
+
+	abstract cleanFieldValues(): void;
 }

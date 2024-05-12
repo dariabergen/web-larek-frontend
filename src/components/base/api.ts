@@ -1,8 +1,3 @@
-export type ApiListResponse<Type> = {
-	total: number;
-	items: Type[];
-};
-
 export class Api {
 	readonly baseUrl: string;
 	protected options: RequestInit;
@@ -40,5 +35,4 @@ export class Api {
 		}).then(this.handleResponse);
 	}
 }
-
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';

@@ -1,27 +1,32 @@
-import { IBasket } from '../types';
+import { createElement, priceString } from '../utils/utils';
 import { Component } from './base/component';
-import { createElement, ensureElement, formatNumber } from './../utils/utils';
 import { EventEmitter } from './base/events';
 
-export class Basket extends Component<IBasket> { 
+interface IBasket {
+	items: HTMLElement[];
+	total: string;
+}
+
+export class Basket extends Component<IBasket> {
 	protected _list: HTMLElement;
 	protected _total: HTMLElement;
-	button: HTMLElement;
+	protected _button: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: EventEmitter) {
 		super(container);
 
-		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this._list = this.container.querySelector('.basket__list');
 		this._total = this.container.querySelector('.basket__price');
-		this.button = this.container.querySelector('.basket__button');
+		this._button = this.container.querySelector('.basket__button');
 
-		if (this.button) {
-			this.button.addEventListener('click', () => {
+		if (this._button) {
+			this._button.addEventListener('click', () => {
 				events.emit('order:open');
 			});
 		}
 
 		this.items = [];
+		this.disableButton(true);
 	}
 
 	set items(items: HTMLElement[]) {
@@ -36,15 +41,11 @@ export class Basket extends Component<IBasket> {
 		}
 	}
 
-	set selected(items: string[]) {
-		if (items.length) {
-			this.setDisabled(this.button, false);
-		} else {
-			this.setDisabled(this.button, true);
-		}
+	set total(total: number) {
+		this._total.textContent = priceString(total);
 	}
 
-	set total(total: number) {
-		this.setText(this._total, formatNumber(total) + ' ' + 'синапсов');
+	disableButton(disabled: boolean) {
+		this.setDisabled(this._button, disabled);
 	}
 }
