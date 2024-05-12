@@ -1,6 +1,5 @@
-
-import { IOrderForm } from '../types';
-import { Form } from './form';
+import { Form } from './common/form';
+import { IOrderForm } from '../types/index';
 import { IEvents } from './base/events';
 
 export class Contacts extends Form<IOrderForm> {
@@ -18,7 +17,3 @@ export class Contacts extends Form<IOrderForm> {
 			value;
 	}
 }
-
-
-
-

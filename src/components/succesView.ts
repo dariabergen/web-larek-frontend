@@ -1,6 +1,10 @@
-import { ISuccess, ISuccessActions } from '../types';
-import { ensureElement } from '../utils/utils';
 import { Component } from './base/component';
+import { ensureElement } from './../utils//utils';
+import { ISuccess } from '../types';
+
+interface ISuccessActions {
+	onClick: () => void;
+}
 
 export class Success extends Component<ISuccess> {
 	protected _close: HTMLElement;
@@ -11,11 +15,11 @@ export class Success extends Component<ISuccess> {
 
 		this._close = ensureElement<HTMLElement>(
 			'.order-success__close',
-			container
+			this.container
 		);
 		this._total = ensureElement<HTMLElement>(
 			'.order-success__description',
-			container
+			this.container
 		);
 
 		if (actions?.onClick) {
@@ -23,7 +27,7 @@ export class Success extends Component<ISuccess> {
 		}
 	}
 
-	set total(total: string) {
+	set total(total: number) {
 		this.setText(this._total, `Списано ${total} синапсов`);
 	}
 }

@@ -1,19 +1,23 @@
-import { IEvents } from './base/events';
 import { Component } from './base/component';
+import { IEvents } from './base/events';
 import { ensureElement } from '../utils/utils';
-import { IPage } from '../types';
+
+interface IPage {
+	counter: number;
+	catalog: HTMLElement[];
+}
 
 export class Page extends Component<IPage> {
-	protected _counterBasket: HTMLElement;
-	protected _cardList: HTMLElement;
+	protected _counter: HTMLElement;
+	protected _catalog: HTMLElement;
 	protected _wrapper: HTMLElement;
 	protected _basket: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
-		this._counterBasket = ensureElement<HTMLElement>('.header__basket-counter');
-		this._cardList = ensureElement<HTMLElement>('.gallery');
+		this._counter = ensureElement<HTMLElement>('.header__basket-counter');
+		this._catalog = ensureElement<HTMLElement>('.gallery');
 		this._wrapper = ensureElement<HTMLElement>('.page__wrapper');
 		this._basket = ensureElement<HTMLElement>('.header__basket');
 
@@ -23,11 +27,11 @@ export class Page extends Component<IPage> {
 	}
 
 	set counter(value: number) {
-		this.setText(this._counterBasket, String(value));
+		this.setText(this._counter, String(value));
 	}
 
 	set catalog(items: HTMLElement[]) {
-		this._cardList.replaceChildren(...items);
+		this._catalog.replaceChildren(...items);
 	}
 
 	set locked(value: boolean) {

@@ -1,98 +1,68 @@
 export interface IProduct {
-	id: string;
-	description: string;
-	image: string;
-	title: string;
-	category: string;
+	id: string; 
+	description: string; 
+	image: string; 
+	title: string; 
+	category: string; 
 	price: number | null;
 }
 
 export interface ISuccess {
-	id: string;
-	total: string;
+	total: number;
 }
 
 export interface IAppData {
-	cardList: IProduct[];
-	basket: string[];
-	order: IOrder | null;
-	preview: string | null;
-	formErrors: TFormErrors;
+	catalog: IProduct[]; 
+	basket: string[]; 
+	order: IOrder; 
 }
 
-export interface IOrderSuccess {
-	id: string;
-	total: number;
+export interface IOrderForm {
+	email: string; 
+	phone: string; 
 }
+
+export interface IOrderContact {
+	payment: string; 
+	address: string; 
+}
+
+export interface IOrder extends IOrderForm, IOrderContact {
+	total: number; 
+	items: string[]; 
+}
+
+export interface IOrderAnswer {
+	total: number; 
+}
+
+export interface IPage {
+	counter: HTMLElement;
+	catalog: HTMLElement; 
+	basket: HTMLElement; 
+}
+
+export type FormErrors = Partial<Record<keyof IOrder, string>>;
 
 export interface IModalData {
 	content: HTMLElement;
 }
 
-export interface IOrderForm {
-	payment?: string;
-	address?: string;
-	phone?: string;
-	email?: string;
-	total?: string | number;
-}
-
-export interface IOrder extends IOrderForm {
-	items: string[];
-}
-
-export interface IOrder extends IOrderForm {
-	items: string[];
-}
-
 export interface IBasket {
-	items: string[];
+	items: HTMLElement[];
 	total: number;
 }
 
-export interface IProductBasket {
-	index: number;
+export interface ICard {
+	id: string;
 	title: string;
-	price: number;
+	category: string;
+	description: string;
+	image: string;
+	price: number | null;
+	index?: number;
 }
 
-export interface ISuccessActions {
-	onClick: () => void;
-}
-
-export interface IModal {
-	content: HTMLElement;
-}
-
-export type ApiListResponse<Type> = {
-	total: number;
-	items: Type[];
+export type CatalogItemStatus = {
+	category: 'софт-скил' | 'хард-скил' | 'другое' | 'кнопка' | 'дополнительное';
 };
-
-export interface IActions {
-	onClick: (event: MouseEvent) => void;
-}
-
-export interface IPage {
-	cardList: HTMLElement[];
-}
-
-export interface IPreviewCard {
-	text: string;
-}
-
-export interface IFormValid {
-	valid: boolean;
-	errors: string[];
-}
-
-export type TFormErrors = Partial<Record<keyof IOrder, string>>;
-export type FormErrors = Partial<Record<keyof IOrder, string>>;
-
-export enum CardCategoryEnum {
-	'софт-скил' = 'soft',
-	'другое' = 'other',
-	'дополнительное' = 'additional',
-	'кнопка' = 'button',
-	'хард-скил' = 'hard',
-}

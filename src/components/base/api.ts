@@ -1,3 +1,8 @@
+export type ApiListResponse<Type> = {
+	total: number;
+	items: Type[];
+};
+
 export class Api {
 	readonly baseUrl: string;
 	protected options: RequestInit;
